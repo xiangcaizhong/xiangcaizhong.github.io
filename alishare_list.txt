@@ -49,6 +49,7 @@ C-纪录片/综合	tzM8rVBaKd2	6357cc7b987c9e15d8a14098944c36f508950ff7
 D-戏曲/合集	noWQuAz4TRJ	636a6d9ed092dfa0aa974d7eaeaa4618bfd0345d
 E-学习/纪录片合集	pryTPxkErJk	6286e16865d38ce9ef0d4d51a838a23eb37f45b6
 E-学习/英语阅读理解     zb4vXCt7cLj      5fc46e806b25b02813c943b0834b11d37e3caa3a
+E-学习/高思系列小学奥数辅导      3th6mGCqxcc       62234ae047557d4a71d94063bd44583eaf18afab
 E-学习/自然拼读superwhy     hm79A6EFEM3     64dc9119a20924c4635b4dd895e2884167159a45
 E-学习/高思/高思三年级数学   qQQSiFeU4ed   6187d79c57cdd6ea16a14a7f92c8824fe1251a1d
 E-学习/高思/高思系列小学奥数辅导教材    3th6mGCqxcc        62234ae047557d4a71d94063bd44583eaf18afab
