@@ -10,7 +10,6 @@
 5-私人定制/1-盒子使用教程	7MYdA8dtTqj	65478f9604407e9ac8b24448856edd6bf214027c
 5-私人定制/F-付费存转   FjkzGBXo3mm    63d781f208a8db4c4fac455bb6295fecd9ec81e4
 5-私人定制/Z-暂存       naJRX6K9QKX   6663d26655130b11986f4e4cac48001ebfe12a3a
-5-私人定制/Z-暂存/动漫更新中   hKHWxqz69E9   64ec931c2f725835432149558bfe2c867cade692
 5-私人定制/Z-暂存/国产热播剧更新中   ktDKcCaV2ix   6439529dec4b2183f85e4e628df73b970e8db614
 5-私人定制/Z-暂存/国漫更新中       8TVUFqAwZix    63ba6960f104f581a3df4373a29920e595236b06
 5-私人定制/Z-暂存/更新中的动漫    v1bBBEcNf9p   6249b2691f526801d92a4e8e8e6ed5ee42bef533
@@ -62,7 +61,6 @@ E-学习/香织社41G	rJsoF3wx8JP	63a075e49219ad006fcf4404a5a44c6e32abe7b1
 E-学习/小学及中学资料大合集  ZE8ngpetsxq   63844a8457cfb3a9c25145729e11fdfdf65c8620
 E-学习/斑马ai/语文   7fQ4oE7XXW7     6274abc5851a93b3018a4a1db5c19023101617a4
 E-学习/数学/DK图解数学   VgqmSJkpHk6  618e97f77c57cef271d14ec5ba2ef07e195d03c6
-E-学习/数学/高斯数学     z3CNjzQd4KZ  61eb8f9fb78ac6fab82f4d3785a4fac6693d9de8
 E-学习/数学/小学数学思维  a4s7QjumD7R  63880508a484083547964e32897b19ae82dc7c32
 E-学习/乐高课            V6Us2V7cJwB    624fa27debb4e787a7b649b3bac0e0c16c18771c
 E-学习/小学奥数      N5udFRESVr3      62de14e621bacb8bff374ca0aa9abe40d2e6bea4
