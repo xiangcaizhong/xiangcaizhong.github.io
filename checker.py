@@ -1,51 +1,13 @@
 #!/usr/bin/env python3
 """
-阿里云盘分享链接有效性检测脚本（优化版）
-1. 使用 get_share_token 验证（与成功版本一致）
-2. 对 token 成功的链接，再调用 get_share_info 确认分享信息可获取
-3. 使用 requests 直接调用 API，避免 aligo 版本问题
-4. 调整请求间隔为 0.5 秒，减少 429 风险
+阿里云盘分享链接有效性检测脚本（稳定版）
+仅使用 get_share_token 验证，成功率最高
 """
 
 import os
 import sys
 import time
-import requests
 from aligo import Aligo
-
-def get_share_info_via_api(share_id, share_token):
-    """获取分享基本信息，返回 (是否成功, 错误码或信息)"""
-    url = "https://api.aliyundrive.com/v2/share_link/get_share_info"
-    headers = {
-        "Authorization": f"Bearer {share_token}",
-        "Content-Type": "application/json",
-    }
-    body = {"share_id": share_id}
-    try:
-        resp = requests.post(url, json=body, headers=headers, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            if "code" in data:
-                # 有错误码，如 ShareLink.Forbidden, NotFound.Drive
-                return False, data["code"]
-            # 有效分享应包含 name 或 creator 等字段
-            if "name" in data or "creator" in data:
-                return True, "ok"
-            else:
-                return False, "no_info"
-        else:
-            # 非200，尝试解析错误
-            try:
-                err = resp.json()
-                code = err.get("code")
-                if code:
-                    return False, code
-                else:
-                    return False, f"HTTP {resp.status_code}"
-            except:
-                return False, f"HTTP {resp.status_code}"
-    except Exception as e:
-        return False, str(e)
 
 def main():
     refresh_token = os.environ.get("ALIYUN_REFRESH_TOKEN")
@@ -88,37 +50,18 @@ def main():
         share_id = parts[1]
         extra_pwd = parts[2] if len(parts) >= 3 else None
 
-        # 尝试密码列表：空密码和第三段
         passwords_to_try = [""]
         if extra_pwd:
             passwords_to_try.append(extra_pwd)
 
         success = False
-        detail = ""
         for pwd in passwords_to_try:
             try:
-                # 第一步：获取 share_token
                 share_token_resp = ali.get_share_token(share_id=share_id, share_pwd=pwd)
-                if not share_token_resp or not share_token_resp.share_token:
-                    continue
-                share_token = share_token_resp.share_token
-
-                # 第二步：验证分享信息（get_share_info）
-                ok, msg = get_share_info_via_api(share_id, share_token)
-                if ok:
+                if share_token_resp and share_token_resp.share_token:
                     success = True
-                    detail = "有效"
                     break
-                else:
-                    detail = f"分享信息获取失败: {msg}"
-                    # 如果错误是密码相关，继续尝试下一个密码；否则直接跳出
-                    if "SharePwd" in msg or "share_pwd" in msg:
-                        continue
-                    else:
-                        # 非密码错误（如 Forbidden, NotFound），不再尝试其他密码
-                        break
-            except Exception as e:
-                detail = str(e)
+            except Exception:
                 continue
 
         if success:
@@ -126,12 +69,10 @@ def main():
             print(f"✅ 有效: {path}")
         else:
             invalid_lines.append(line)
-            print(f"❌ 失效: {path} — {detail}")
+            print(f"❌ 失效: {path}")
 
-        # 固定间隔 0.5 秒，减少触发频率限制
-        time.sleep(0.5)
+        time.sleep(0.2)   # 缩短间隔，减少等待
 
-    # 更新文件
     with open(input_file, "w", encoding="utf-8") as f:
         f.write("\n".join(valid_lines))
         if valid_lines and valid_lines[-1] != "":
