@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-阿里云盘分享链接有效性检测脚本 - 使用 aligo 库
+阿里云盘分享链接有效性检测脚本 - 支持网页密码版本
 """
 import os
 from aligo import Aligo
+import requests
+import json
 
 def main():
-    # 从 GitHub Secrets 读取 refresh_token
     refresh_token = os.environ.get("ALIYUN_REFRESH_TOKEN", "")
     if not refresh_token:
         print("错误: 未设置 ALIYUN_REFRESH_TOKEN 环境变量")
@@ -29,7 +30,7 @@ def main():
         print(f"错误: 找不到文件 {input_file}")
         return
 
-    print(f"开始检测 {len(lines)} 个分享链接...")
+    print(f"开始检测 {len(lines)} 个分享链接...\n")
 
     for line in lines:
         line = line.strip()
@@ -43,17 +44,24 @@ def main():
             continue
 
         path, share_id, share_pwd = parts[0], parts[1], parts[2]
+
+        # 尝试直接调用 API，传入网页密码
         try:
             share_token = ali.get_share_token(share_id=share_id, share_pwd=share_pwd)
-            if share_token.share_token:
+            if share_token and share_token.share_token:
                 valid_lines.append(line)
                 print(f"✅ 有效: {path}")
             else:
                 invalid_lines.append(line)
-                print(f"❌ 失效: {path}")
+                print(f"❌ 失效: {path} (无法获取分享Token)")
         except Exception as e:
+            # 捕获异常，并尝试检查是否是密码错误
+            error_str = str(e)
+            if "SharePwd" in error_str or "share_pwd" in error_str:
+                print(f"❌ 密码错误: {path} (网页密码 '{share_pwd}' 可能不正确)")
+            else:
+                print(f"❌ 检测出错: {path} - {error_str}")
             invalid_lines.append(line)
-            print(f"❌ 检测出错: {path} - {e}")
 
     # 更新原文件
     with open(input_file, "w", encoding="utf-8") as f:
