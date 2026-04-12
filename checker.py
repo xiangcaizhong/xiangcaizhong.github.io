@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-阿里云盘分享链接有效性检测脚本（混合版）
-1. 使用 get_share_token 验证（与之前成功版本一致）
-2. 对 token 成功的链接，再调用一次文件列表 API 确认实际可访问
-3. 使用 requests 直接调用 API，避免 aligo 版本兼容问题
+阿里云盘分享链接有效性检测脚本（优化版）
+1. 使用 get_share_token 验证（与成功版本一致）
+2. 对 token 成功的链接，再调用 get_share_info 确认分享信息可获取
+3. 使用 requests 直接调用 API，避免 aligo 版本问题
+4. 调整请求间隔为 0.5 秒，减少 429 风险
 """
 
 import os
@@ -12,36 +13,28 @@ import time
 import requests
 from aligo import Aligo
 
-def check_file_list_via_api(share_id, share_token):
-    """直接调用阿里云盘文件列表 API，返回 (是否成功, 错误信息)"""
-    url = "https://api.aliyundrive.com/v2/share_link/get_share_file_list"
+def get_share_info_via_api(share_id, share_token):
+    """获取分享基本信息，返回 (是否成功, 错误码或信息)"""
+    url = "https://api.aliyundrive.com/v2/share_link/get_share_info"
     headers = {
         "Authorization": f"Bearer {share_token}",
         "Content-Type": "application/json",
     }
-    body = {
-        "share_id": share_id,
-        "limit": 1,
-        "order_by": "name",
-        "order_direction": "ASC",
-        "parent_file_id": "root",
-    }
+    body = {"share_id": share_id}
     try:
         resp = requests.post(url, json=body, headers=headers, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            # 检查是否有错误码
             if "code" in data:
-                if data["code"] in ("NotFound.Drive", "ShareLink.Forbidden"):
-                    return False, data["code"]
-            # 有 items 且至少一个条目
-            if data.get("items") and len(data["items"]) > 0:
+                # 有错误码，如 ShareLink.Forbidden, NotFound.Drive
+                return False, data["code"]
+            # 有效分享应包含 name 或 creator 等字段
+            if "name" in data or "creator" in data:
                 return True, "ok"
             else:
-                # 无 items 或空列表，视为失效（分享可能为空或无法访问）
-                return False, "empty_list"
+                return False, "no_info"
         else:
-            # 尝试解析错误
+            # 非200，尝试解析错误
             try:
                 err = resp.json()
                 code = err.get("code")
@@ -95,7 +88,7 @@ def main():
         share_id = parts[1]
         extra_pwd = parts[2] if len(parts) >= 3 else None
 
-        # 尝试密码列表
+        # 尝试密码列表：空密码和第三段
         passwords_to_try = [""]
         if extra_pwd:
             passwords_to_try.append(extra_pwd)
@@ -110,16 +103,20 @@ def main():
                     continue
                 share_token = share_token_resp.share_token
 
-                # 第二步：验证文件列表（额外检查）
-                ok, msg = check_file_list_via_api(share_id, share_token)
+                # 第二步：验证分享信息（get_share_info）
+                ok, msg = get_share_info_via_api(share_id, share_token)
                 if ok:
                     success = True
-                    detail = "文件列表可访问"
+                    detail = "有效"
                     break
                 else:
-                    detail = f"token有效但列表失败: {msg}"
-                    # 如果列表失败，不认为有效，继续尝试下一个密码（如果有）
-                    continue
+                    detail = f"分享信息获取失败: {msg}"
+                    # 如果错误是密码相关，继续尝试下一个密码；否则直接跳出
+                    if "SharePwd" in msg or "share_pwd" in msg:
+                        continue
+                    else:
+                        # 非密码错误（如 Forbidden, NotFound），不再尝试其他密码
+                        break
             except Exception as e:
                 detail = str(e)
                 continue
@@ -131,8 +128,8 @@ def main():
             invalid_lines.append(line)
             print(f"❌ 失效: {path} — {detail}")
 
-        # 动态调整间隔：如果遇到 429 可适当增加，这里简单使用 0.3 秒
-        time.sleep(0.3)
+        # 固定间隔 0.5 秒，减少触发频率限制
+        time.sleep(0.5)
 
     # 更新文件
     with open(input_file, "w", encoding="utf-8") as f:
