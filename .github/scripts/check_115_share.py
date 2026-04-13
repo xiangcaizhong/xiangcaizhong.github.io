@@ -3,11 +3,15 @@
 检查115分享链接有效性，并清理失效链接
 """
 import os
-import re
 import sys
 from pathlib import Path
 from p115client import P115Client
-from p115client.exception import P115Warning, AuthenticationError, BusyError, DataError
+from p115client.exception import (
+    P115Warning,
+    P115AuthenticationError,
+    P115BusyError,
+    P115DataError,
+)
 
 # 分享列表文件路径（相对于仓库根目录）
 SHARE_FILE = "115share_list.txt"
@@ -32,21 +36,18 @@ def validate_share(client: P115Client, share_code: str, receive_code: str, cid: 
 
         # 进一步检查是否需要提取码以及提取码是否正确
         if resp.get("is_code"):
-            # 需要提取码，验证提取码是否正确
             try:
                 client.share_receive(share_code, receive_code, cid=cid or None)
-            except (DataError, BusyError, AuthenticationError) as e:
+            except (P115DataError, P115BusyError, P115AuthenticationError) as e:
                 code = getattr(e, 'code', 0)
                 if code in INVALID_SHARE_CODES:
                     return False
-                # 其他错误（如网络问题）暂时放过，当作有效
                 return True
         return True
-    except (P115Warning, DataError) as e:
+    except (P115Warning, P115DataError, P115AuthenticationError, P115BusyError) as e:
         code = getattr(e, 'code', 0)
         if code in INVALID_SHARE_CODES:
             return False
-        # 无法确定时先当作有效
         print(f"  ⚠️ 检查异常（code={code}），暂时保留")
         return True
     except Exception as e:
