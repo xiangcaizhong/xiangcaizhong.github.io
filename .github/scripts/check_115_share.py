@@ -6,12 +6,6 @@ import os
 import sys
 from pathlib import Path
 from p115client import P115Client
-from p115client.exception import (
-    P115Warning,
-    P115AuthenticationError,
-    P115BusyError,
-    P115DataError,
-)
 
 # 分享列表文件路径（相对于仓库根目录）
 SHARE_FILE = "115share_list.txt"
@@ -38,21 +32,21 @@ def validate_share(client: P115Client, share_code: str, receive_code: str, cid: 
         if resp.get("is_code"):
             try:
                 client.share_receive(share_code, receive_code, cid=cid or None)
-            except (P115DataError, P115BusyError, P115AuthenticationError) as e:
+            except Exception as e:
                 code = getattr(e, 'code', 0)
                 if code in INVALID_SHARE_CODES:
                     return False
+                # 其他错误暂时放过，当作有效
+                print(f"  ⚠️ 接收异常（code={code}），暂时保留")
                 return True
         return True
-    except (P115Warning, P115DataError, P115AuthenticationError, P115BusyError) as e:
+    except Exception as e:
         code = getattr(e, 'code', 0)
         if code in INVALID_SHARE_CODES:
             return False
+        # 无法确定时先当作有效
         print(f"  ⚠️ 检查异常（code={code}），暂时保留")
         return True
-    except Exception as e:
-        print(f"  ❌ 未预期错误: {e}")
-        return False
 
 
 def main():
