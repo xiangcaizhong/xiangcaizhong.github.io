@@ -1,10 +1,10 @@
-name: 自动生成115share_list
+name: 自动更新115分享列表   # 注意名称匹配
 
 on:
   push:
     paths:
-      - '115.txt'          # 当115.txt被推送时触发
-  workflow_dispatch:       # 也支持手动触发
+      - '115.txt'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: 安装依赖
-        run: pip install requests
+        run: pip install requests   # 应该是 requests，不是 p115client
 
       - name: 处理115.txt并生成115share_list.txt
         env:
