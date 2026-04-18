@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-115分享链接CID自动提取工具 - 使用snap API (POST方法)
+115分享链接CID自动提取工具 - 使用 /webapi/share/snap (GET)
 """
 import os
 import re
@@ -9,7 +9,7 @@ import json
 import time
 
 def get_cid_from_share(share_url, password, cookie):
-    """通过snap API获取分享文件夹的CID"""
+    """通过 snap API 获取分享文件夹的 CID"""
     
     # 提取分享码
     share_code_match = re.search(r'/s/([a-zA-Z0-9]+)', share_url)
@@ -21,83 +21,47 @@ def get_cid_from_share(share_url, password, cookie):
     print(f"📁 分享码: {share_code}")
     print(f"🔑 密码: {password}")
     
-    # 完整的请求头，模拟浏览器
-    headers = {
-        "Cookie": cookie,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Origin": "https://115cdn.com",
-        "Referer": f"https://115cdn.com/s/{share_code}?password={password}",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "Connection": "keep-alive"
-    }
-    
-    # 使用 POST 方法，参数放在 data 中
+    # 使用 GET 方法，参数拼接到 URL
     snap_url = "https://115cdn.com/webapi/share/snap"
-    data = {
+    params = {
         "share_code": share_code,
-        "receive_code": password,
+        "receive_code": password,   # 注意参数名是 receive_code
         "cid": 0,
         "limit": 1
     }
     
+    headers = {
+        "Cookie": cookie,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": f"https://115cdn.com/s/{share_code}?password={password}"
+    }
+    
     try:
-        print(f"🌐 调用API (POST): {snap_url}")
-        # 使用 session 保持连接
-        session = requests.Session()
-        session.headers.update(headers)
-        
-        resp = session.post(snap_url, data=data, timeout=15)
+        print(f"🌐 调用API: {snap_url}")
+        resp = requests.get(snap_url, params=params, headers=headers, timeout=15)
         print(f"📡 响应状态码: {resp.status_code}")
         
         if resp.status_code == 200:
-            try:
-                data_json = resp.json()
-                print(f"📡 API返回: {json.dumps(data_json, ensure_ascii=False)[:200]}")
-                
-                if data_json.get("state") == True:
-                    file_list = data_json.get("data", {}).get("list", [])
-                    if file_list and len(file_list) > 0:
-                        cid = str(file_list[0].get("cid"))
-                        if cid and cid != "0":
-                            print(f"✅ 成功获取CID: {cid}")
-                            return cid
-                        else:
-                            print(f"⚠️ 获取到的CID为0")
+            data = resp.json()
+            print(f"📡 API返回: {json.dumps(data, ensure_ascii=False)[:200]}")
+            
+            if data.get("state") == True:
+                file_list = data.get("data", {}).get("list", [])
+                if file_list and len(file_list) > 0:
+                    cid = str(file_list[0].get("cid"))
+                    if cid and cid != "0":
+                        print(f"✅ 成功获取CID: {cid}")
+                        return cid
                     else:
-                        print(f"⚠️ list为空")
+                        print(f"⚠️ 获取到的CID为0")
                 else:
-                    error_msg = data_json.get("error", "未知错误")
-                    print(f"❌ API返回错误: {error_msg}")
-            except Exception as e:
-                print(f"❌ JSON解析失败: {e}, 原始响应: {resp.text[:200]}")
+                    print(f"⚠️ list为空")
+            else:
+                error_msg = data.get("error", "未知错误")
+                print(f"❌ API返回错误: {error_msg}")
         else:
             print(f"❌ HTTP错误: {resp.status_code}")
-            # 尝试 GET 方法作为后备
-            print("🔄 尝试GET方法...")
-            params = {
-                "share_code": share_code,
-                "receive_code": password,
-                "cid": 0,
-                "limit": 1
-            }
-            resp2 = session.get(snap_url, params=params, timeout=15)
-            if resp2.status_code == 200:
-                data_json = resp2.json()
-                if data_json.get("state") == True:
-                    file_list = data_json.get("data", {}).get("list", [])
-                    if file_list:
-                        cid = str(file_list[0].get("cid"))
-                        if cid and cid != "0":
-                            print(f"✅ GET方法成功获取CID: {cid}")
-                            return cid
-            print(f"GET方法也失败: {resp2.status_code}")
-            
     except Exception as e:
         print(f"❌ 请求异常: {e}")
     
@@ -109,7 +73,6 @@ def parse_line(line):
     if not line:
         return None
     
-    # 分割序号+目录 和 URL
     parts = re.split(r'\s+', line, maxsplit=1)
     if len(parts) != 2:
         print(f"❌ 格式错误（缺少URL）: {line}")
@@ -117,7 +80,6 @@ def parse_line(line):
     
     title_part, url = parts[0], parts[1]
     
-    # 提取密码
     password_match = re.search(r'password=([^&]+)', url)
     if not password_match:
         print(f"❌ 无法提取密码: {url}")
@@ -126,42 +88,15 @@ def parse_line(line):
     
     return title_part, url, password
 
-def test_cookie(cookie):
-    """测试Cookie是否有效"""
-    try:
-        test_url = "https://115.com/web/lixian/?ct=lixian&ac=user_info"
-        headers = {
-            "Cookie": cookie,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-        resp = requests.get(test_url, headers=headers, timeout=10)
-        if resp.status_code == 200:
-            try:
-                data = resp.json()
-                if data.get("state") == True:
-                    print("✅ Cookie有效")
-                    return True
-            except:
-                pass
-        print("❌ Cookie可能已失效")
-        return False
-    except Exception as e:
-        print(f"测试Cookie时出错: {e}")
-        return False
-
 def main():
     print("=" * 60)
-    print("115分享链接CID自动提取工具 (snap API - POST)")
+    print("115分享链接CID自动提取工具 (snap API - GET)")
     print("=" * 60)
     
     cookie = os.environ.get("COOKIE_115")
     if not cookie:
         print("❌ 错误: 环境变量 COOKIE_115 未设置")
         return
-    
-    # 测试Cookie (可选，不影响主流程)
-    print("\n🔍 测试Cookie...")
-    test_cookie(cookie)
     
     source_file = "115.txt"
     target_file = "115share_list.txt"
@@ -189,19 +124,16 @@ def main():
             continue
         
         title_part, share_url, password = parsed
-        # 隐藏密码部分
         display_url = re.sub(r'password=[^&]+', 'password=***', share_url)
         print(f"📝 标题: {title_part}")
         print(f"🔗 链接: {display_url}")
         
-        # 获取CID
         cid = get_cid_from_share(share_url, password, cookie)
         
         if not cid:
-            print(f"❌ 跳过第{line_num}行: 获取CID失败")
+            print(f"❌ 跳过第{line_num}行")
             continue
         
-        # 提取分享码用于输出
         share_match = re.search(r'/s/([a-zA-Z0-9]+)', share_url)
         share_code = share_match.group(1) if share_match else "unknown"
         
@@ -209,7 +141,7 @@ def main():
         new_lines.append(new_line)
         print(f"✅ 已处理: {title_part}")
         
-        time.sleep(1)  # 避免请求过快
+        time.sleep(1)
     
     if new_lines:
         with open(target_file, "w", encoding="utf-8") as f:
