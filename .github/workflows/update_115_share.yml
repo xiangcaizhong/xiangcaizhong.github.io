@@ -17,15 +17,13 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
       
-      - name: 设置Python
+      - name: 设置Python环境
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
       
       - name: 安装依赖
-        run: |
-          pip install p115client
-          pip show p115client
+        run: pip install requests
       
       - name: 运行更新脚本
         env:
