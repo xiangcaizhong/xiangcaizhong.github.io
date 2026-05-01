@@ -1,1 +1,59 @@
+# hosts.conf
 
+# This configuration file allows you to manually map hostnames to
+# IP addresses
+
+# Format:  <ipaddress> <hostname1> <hostname2>
+# Example: 192.168.0.3 libreelec libreelec.mynetwork
+
+# NOTE: do not edit /etc/hosts directly
+# edit /storage/.config/hosts.conf then reboot
+
+# TMDB API 接口 (请测试后使用)
+# 13.224.161.90 api.themoviedb.org
+# 13.226.225.73 api.themoviedb.org
+# 65.9.189.27 api.themoviedb.org
+
+# TMDB 主站及图片资源
+18.67.51.21 www.themoviedb.org
+# 108.138.26.28 image.tmdb.org
+# 13.225.196.2 image.tmdb.org
+
+# Github 相关
+20.205.243.166 github.com
+20.205.243.166 www.github.com
+185.199.111.133 raw.githubusercontent.com
+# 185.199.108.153 raw.githubusercontent.com
+# ---------- TMDB 接口 (性能较好) ----------
+99.84.152.8 api.themoviedb.org
+
+# ---------- TMDB 主站 (可选) ----------
+# 13.33.82.8 www.themoviedb.org
+# 99.84.215.74 www.themoviedb.org
+
+# ---------- TMDB 图片资源 (稳定) ----------
+# 108.138.26.28 image.tmdb.org
+
+# ---------- GitHub 相关 (稳定首选) ----------
+20.205.243.166 github.com
+20.205.243.166 www.github.com
+185.199.108.133 raw.githubusercontent.com
+
+# TMDB API 接口 (以下IP为近期解析，请多测试)
+18.244.214.89 api.themoviedb.org
+99.84.152.8 api.themoviedb.org
+18.238.238.6 api.themoviedb.org
+13.224.185.118 api.themoviedb.org
+108.156.46.56 api.themoviedb.org
+108.157.4.46 api.themoviedb.org
+
+# TMDB 主站 (优先测试以下IP)
+13.33.82.8 www.themoviedb.org
+99.84.215.74 www.themoviedb.org
+
+# TMDB 图片资源 (优先测试以下IP)
+108.138.26.28 image.tmdb.org
+52.85.115.61 image.tmdb.org
+99.84.238.202 image.tmdb.org
+99.84.238.181 image.tmdb.org
+143.244.49.183 image.tmdb.org
