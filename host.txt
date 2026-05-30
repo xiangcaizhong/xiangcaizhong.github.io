@@ -57,3 +57,17 @@
 99.84.238.202 image.tmdb.org
 99.84.238.181 image.tmdb.org
 143.244.49.183 image.tmdb.org
+
+# GitHub (测试通过)
+185.199.110.133 raw.githubusercontent.com
+
+# TMDB API (三个IP均可用)
+54.230.253.60 api.themoviedb.org
+3.169.231.17 api.themoviedb.org
+108.156.46.129 api.themoviedb.org
+
+# TMDB 主站 (测试通过)
+13.225.117.101 www.themoviedb.org
+
+# 注意：image.tmdb.org 和 media.themoviedb.org 的所有IP均测试失败
+# 图片刮削问题无法仅通过 hosts 解决，需要修改刮削器或使用本地刮削工具
